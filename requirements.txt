@@ -1,0 +1,4 @@
+fastapi==0.128.8
+fastapi-cli==0.0.22
+fastapi-cloud-cli==0.12.0
+SQLAlchemy==2.0.46
