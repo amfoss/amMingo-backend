@@ -12,7 +12,7 @@ class User(Base):
     password=Column(String)
 
 class Game(Base):
-    __tablename__="table"
+    __tablename__="game"
     __table_args__ = (
         CheckConstraint('start_time < end_time'),
         CheckConstraint('host != winner')
@@ -22,7 +22,7 @@ class Game(Base):
     description=Column(Text, nullable=False)
     start_time=Column(DateTime, default=lambda: datetime.now(timezone.utc))
     end_time=Column(DateTime, nullable=False)
-    winner=Column(Integer, ForeignKey("Uuser.id"))
+    winner=Column(Integer, ForeignKey("user.id"))
 
 class Bingo(Base):
     __tablename__="bingo"
