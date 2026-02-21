@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
-load_dotenv() 
+load_dotenv()
 
 DATABASE_URL = os.getenv("DB_URL")
 
@@ -14,6 +14,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 Base = declarative_base()
+
 
 def get_db():
     db = SessionLocal()

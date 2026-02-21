@@ -7,7 +7,9 @@ pydantic==2.12.5
 pydantic_core==2.41.5
 Pygments==2.19.2
 python-dotenv==1.2.14
+psycopg2==2.9.11
 SQLAlchemy==2.0.46
 uvicorn==0.39.0
 qrcode
 pillow
+Authlib==1.6.8

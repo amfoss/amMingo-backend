@@ -2,11 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import auth
 from app.routes import game
-
 from app.db.db import engine, Base
 from app.db import models  
-
-
+from starlette.middleware.sessions import SessionMiddleware
+from routes import auth
+import os
 
 app = FastAPI(title="amMingo")
 
@@ -22,9 +22,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/api", tags=["users"])
+app.add_middleware(
+    SessionMiddleware,
+    same_site="lax",
+    secret_key=os.getenv("JWT_SECRET")
+)
+
+app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(game.router, prefix="/api", tags=["games"])
 
-@app.get('/')
+@app.get("/")
 def root():
-    return {'amMingo': 'This is amMingo'}
+    return {"amMingo": "This is amMingo"}
