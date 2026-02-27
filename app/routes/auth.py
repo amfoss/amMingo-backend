@@ -1,7 +1,7 @@
 from db.models import User
 from db.db import get_db
 from models.auth import UserDetails
-from fastapi import APIRouter, HTTPException, Depends, Request, Response
+from fastapi import APIRouter, HTTPException, Depends, Request, Response, responses
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from email.message import EmailMessage
@@ -26,6 +26,7 @@ smtp_server = os.environ.get("SMTP_SERVER")
 smtp_port = os.environ.get("SMTP_PORT")
 google_client_id = os.environ.get("GOOGLE_CLIENT_ID")
 google_client_secret = os.environ.get("GOOGLE_CLIENT_SECRET")
+frontend_url = (os.environ.get("FRONTEND_URL"))
 
 dotenv.load_dotenv()
 router = APIRouter()
@@ -38,7 +39,7 @@ oauth.register(
     client_kwargs={"scope": "openid email profile"},
 )
 
-otps = {}  # For storing otp while logging in codes
+otps = {}  # For storing otp while logging in
 
 
 def generate_access_token(user_id: str) -> str:
@@ -76,22 +77,28 @@ def login_email(payload: EmailLoginRequest, db: Session = Depends(get_db)):
     if not user:
         index = email.find("@")
         username = email[:index]
-        user = User(username=username, name=username, email=email)
+        code = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        user = User(username=username, name=username, email=email, code=code)
         db.add(user)
         db.commit()
+        db.refresh(user)
     otp_code = "".join(random.choices(string.digits, k=6))
     sent = send_mail(to_email=email, otp=otp_code)
     if not sent:
         raise HTTPException(f"Failed to send email to {email}")
-    otps[email] = otp_code
+    otps[email] = {"exp": datetime.now() + timedelta(minutes=5), "otp_code": otp_code}
     return {"Sucess": "Sent the verification mail"}
 
 
 @router.post("/login/verify-otp", response_model=UserDetails)
-def verify_otp(payload: EmailVerify, response: Response, db: Session = Depends(get_db)) -> UserDetails:
+def verify_otp(
+    payload: EmailVerify, response: Response, db: Session = Depends(get_db)
+) -> UserDetails:
     email = payload.email
     otp = payload.otp
-    actual_otp = otps[email]
+    actual_otp = otps[email]["otp_code"]
+    if datetime.now() > otp[email]["exp"]:
+        raise HTTPException(detail="OTP Expired", status_code=403)
     if otp != actual_otp:
         raise HTTPException(detail="Incorrect OTP", status_code=401)
 
@@ -111,20 +118,29 @@ async def redirect_to_google(request: Request):
 
 
 @router.get("/login/callback", name="oauth_callback")
-async def callback(request: Request, response: Response, db: Session = Depends(get_db)) -> UserDetails:
+async def callback(
+    request: Request, response: Response, db: Session = Depends(get_db)
+) -> UserDetails:
     token = await oauth.google.authorize_access_token(request)
     userinfo = token["userinfo"]
     query = select(User).where(User.email == token["userinfo"]["email"])
     user = db.execute(query).scalars().first()
     if not user:
+        code = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
         user = User(
             username=f"user_{userinfo['sub'][-8:]}",
             name=userinfo["name"],
             email=userinfo["email"],
+            code=code,
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-    
-    response.set_cookie(key="access_token", value=token, httponly=True, secure=True)
-    return user
+
+    access_token = generate_access_token(user_id=user.id)
+    response = responses.RedirectResponse(url=frontend_url, status_code=302)
+    response.set_cookie(
+        key="access_token", value=access_token, httponly=True, secure=True
+    )
+
+    return response

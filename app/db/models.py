@@ -18,6 +18,7 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
+    code = Column(String, unique=True, nullable=False)
 
     game_user_bingo = relationship("GameUserBingo", back_populates="user")
 

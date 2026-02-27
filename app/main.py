@@ -23,9 +23,7 @@ app.add_middleware(
 )
 
 app.add_middleware(
-    SessionMiddleware,
-    same_site="lax",
-    secret_key=os.getenv("JWT_SECRET")
+    SessionMiddleware, same_site="lax", secret_key=os.getenv("JWT_SECRET")
 )
 
 app.include_router(auth.router, prefix="/api", tags=["auth"])
