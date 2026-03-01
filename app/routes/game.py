@@ -26,6 +26,10 @@ class CreateGameRequest(BaseModel):
     duration: int
     size: int
 
+class JoinGameRequest(BaseModel):
+    user_id: int
+
+
 
 
 
@@ -94,8 +98,37 @@ def create_game(
     }
 
 
+@router.post("/games/join/{code}")
+def join_game(
+    code: str,
+    data: JoinGameRequest,
+    db: Session = Depends(get_db)
+):
+    game = db.query(Game).filter(Game.code == code).first()
 
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
 
+    existing = db.query(GameParticipant).filter_by(
+        game_id=game.id,
+        user_id=data.user_id
+    ).first()
 
+    if existing:
+        return {"message": "User already joined"}
+
+    participant = GameParticipant(
+        game_id=game.id,
+        user_id=data.user_id
+    )
+
+    db.add(participant)
+    db.commit()
+
+    return {
+        "message": "Joined successfully",
+        "game_id": game.id,
+        "user_id": data.user_id
+    }
 
 
