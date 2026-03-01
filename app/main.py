@@ -1,8 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import auth
+from app.routes import game
 
-app=FastAPI(title="amMingo")
+from app.db.db import engine, Base
+from app.db import models  # IMPORTANT: ensures models are imported
+
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="amMingo")
 
 app.add_middleware(
     CORSMiddleware,
@@ -13,6 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/api", tags=["users"])
+app.include_router(game.router, prefix="/api", tags=["games"])
 
 @app.get('/')
 def root():
