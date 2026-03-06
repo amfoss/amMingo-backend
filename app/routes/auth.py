@@ -1,6 +1,6 @@
-from db.models import User
-from db.db import get_db
-from models.auth import UserDetails
+from app.db.models import User
+from app.db.db import get_db
+from app.models.auth import UserDetails, EmailLoginRequest, EmailVerify
 from fastapi import APIRouter, HTTPException, Depends, Request, Response, responses
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,7 +13,6 @@ import random
 import string
 import smtplib
 from datetime import datetime, timezone, timedelta
-from models.auth import EmailLoginRequest, EmailVerify
 
 secret = os.environ.get(
     "JWT_SECRET", default="dkjfaidfjei4ou9028ruq208mxuHHDUFGHjfeu9!#@*u9fj"
@@ -26,7 +25,7 @@ smtp_server = os.environ.get("SMTP_SERVER")
 smtp_port = os.environ.get("SMTP_PORT")
 google_client_id = os.environ.get("GOOGLE_CLIENT_ID")
 google_client_secret = os.environ.get("GOOGLE_CLIENT_SECRET")
-frontend_url = (os.environ.get("FRONTEND_URL"))
+frontend_url = os.environ.get("FRONTEND_URL")
 
 dotenv.load_dotenv()
 router = APIRouter()

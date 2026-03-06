@@ -8,7 +8,7 @@ from sqlalchemy import (
     CheckConstraint,
 )
 from sqlalchemy.orm import relationship
-from db.db import Base
+from app.db.db import Base
 from datetime import datetime, timezone
 
 
@@ -22,6 +22,7 @@ class User(Base):
 
     game_user_bingo = relationship("GameUserBingo", back_populates="user")
 
+
 class Game(Base):
     __tablename__ = "game"
     __table_args__ = (
@@ -32,7 +33,6 @@ class Game(Base):
 
     host_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     winner_id = Column(Integer, ForeignKey("user.id"), nullable=True)
-
 
     start_time = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     end_time = Column(DateTime, nullable=False)
@@ -47,7 +47,7 @@ class Game(Base):
     qr_img = Column(Text, nullable=True)
 
     game_user_bingos = relationship("GameUserBingo", back_populates="game")
-    
+
 
 class Bingo(Base):
     __tablename__ = "bingo"
@@ -58,6 +58,7 @@ class Bingo(Base):
     image_link = Column(String, unique=True)
 
     game_user_bingo = relationship("GameUserBingo", back_populates="bingo")
+
 
 class GameUserBingo(Base):
     __tablename__ = "game_user_bingo"
