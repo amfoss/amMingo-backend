@@ -20,6 +20,7 @@ from app.models.game import (
     JoinGameResponse,
     LobbyResponse,
     StartGameResponse,
+    GameDetailResponse,
 )
 import random
 
@@ -197,3 +198,25 @@ def create_bingo_matrix(db: Session, game: Game, user_id: int):
             bingo_id=board.id
         )
         db.add(new_tile)
+
+
+@router.get("/games/{code}", response_model=GameDetailResponse)
+def get_game_details(code: str, db: Session = Depends(get_db)):
+    game = db.query(Game).filter(Game.code == code).first()
+
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    return GameDetailResponse(
+        game_id=game.id,
+        host_id=game.host_id,
+        description=game.description,
+        location=game.location,
+        start_time=game.start_time,
+        end_time=game.end_time,
+        code=game.code,
+        board_size=game.board_size,
+        qr_img=f"data:image/png;base64,{game.qr_img}" if game.qr_img else None
+    )
+
+
