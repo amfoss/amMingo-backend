@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Literal
+from datetime import datetime
 
 
 class CreateGameRequest(BaseModel):
@@ -39,3 +40,15 @@ class LobbyResponse(BaseModel):
 class StartGameResponse(BaseModel):
     message: str
     board_size: Literal[3, 4, 5]
+
+
+class GameDetailResponse(BaseModel):
+    game_id: int
+    host_id: int
+    description: str
+    location: str
+    start_time: datetime
+    end_time: datetime
+    code: str
+    board_size: int | None
+    qr_img: str | None
